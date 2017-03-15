@@ -25,6 +25,7 @@ class ReaderCombinedCard extends React.Component {
 		feed: React.PropTypes.object,
 		onClick: React.PropTypes.func,
 		isDiscover: React.PropTypes.bool,
+		postKey: React.PropTypes.object,
 		selectedPostKey: React.PropTypes.object
 	}
 
@@ -36,30 +37,28 @@ class ReaderCombinedCard extends React.Component {
 		this.recordRenderTrack();
 	}
 
-	componentDidUpdate( nextProps ) {
-		if ( size( this.props.posts ) !== size( nextProps.posts ) ) {
-			this.recordRenderTrack();
+	componentWillReceiveProps( nextProps ) {
+		if ( this.props.postKey.feedId !== nextProps.postKey.feedId ||
+			this.props.postKey.blogId !== nextProps.postKey.blogId ||
+			size( this.props.posts ) !== size( nextProps.posts ) ) {
+			this.recordRenderTrack( nextProps );
 		}
 	}
 
-	recordRenderTrack = () => {
-		const { posts } = this.props;
-
-		// Use site ID/feed ID from the first post, because we may not have site and feed objects yet
-		const siteId = posts[ 0 ].blog_ID;
-		const feedId = posts[ 0 ].site_ID;
+	recordRenderTrack = ( props = this.props ) => {
+		const { postKey, posts } = props;
 
 		recordTrack( 'calypso_reader_combined_card_render', {
-			blog_id: siteId,
-			feed_id: feedId,
+			blog_id: postKey.blogId,
+			feed_id: postKey.feedId,
 			post_count: size( posts ),
 		} );
 	}
 
 	render() {
-		const { posts, site, feed, selectedPostKey, onClick, isDiscover, translate } = this.props;
-		const feedId = get( feed, 'feed_ID' );
-		const siteId = get( site, 'ID' );
+		const { posts, site, feed, postKey, selectedPostKey, onClick, isDiscover, translate } = this.props;
+		const feedId = postKey.feedId;
+		const siteId = postKey.blogId;
 		const siteIcon = get( site, 'icon.img' );
 		const feedIcon = get( feed, 'image' );
 		const streamUrl = getStreamUrl( feedId, siteId );
